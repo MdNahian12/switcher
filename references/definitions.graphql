@@ -1,0 +1,7 @@
+# Product metafield definitions used by snippets/switcher.liquid. Create only the ones that don't exist yet.
+mutation {
+  siblings: metafieldDefinitionCreate(definition: {name: "Other shades / sizes", namespace: "switcher", key: "siblings", type: "list.product_reference", ownerType: PRODUCT, pin: true, description: "The whole family (this product included), in button order."}) { createdDefinition { id } userErrors { field message code } }
+  label: metafieldDefinitionCreate(definition: {name: "Switcher label", namespace: "switcher", key: "label", type: "single_line_text_field", ownerType: PRODUCT, pin: true, description: "This product's button text, e.g. Ruby Red or 30ml."}) { createdDefinition { id } userErrors { field message code } }
+  group: metafieldDefinitionCreate(definition: {name: "Switcher heading", namespace: "switcher", key: "group", type: "single_line_text_field", ownerType: PRODUCT, pin: true, description: "Shade, Size, Scent, Type or Set."}) { createdDefinition { id } userErrors { field message code } }
+  swatch: metafieldDefinitionCreate(definition: {name: "Switcher colour", namespace: "switcher", key: "swatch", type: "color", ownerType: PRODUCT, pin: true, description: "Optional colour dot on this product's button."}) { createdDefinition { id } userErrors { field message code } }
+}

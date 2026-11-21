@@ -1,0 +1,66 @@
+{%- comment -%}
+  Switcher: shade / size / scent buttons that link sibling products.
+  Each sibling stays its own product (own URL, SKU, stock, reviews, SEO); this only links them.
+
+  Product metafields (namespace "switcher"):
+    siblings  list.product_reference  the whole family, this product included, in button order
+    label     single_line_text_field  this product's button text, e.g. "Vanilla" or "30ml"
+    group     single_line_text_field  heading, e.g. "Shade", "Size", "Scent" (default "Option")
+    swatch    color                   optional colour dot on this product's button
+
+  Usage, inside the product section, near the price or the add-to-cart button:
+    {% render 'switcher', product: product %}
+{%- endcomment -%}
+{%- assign family = product.metafields.switcher.siblings.value -%}
+{%- if family.size > 1 -%}
+  {%- liquid
+    assign group = product.metafields.switcher.group.value | default: 'Option'
+    assign current_label = product.metafields.switcher.label.value | default: product.title
+    assign others_in_stock = 0
+    for p in family
+      if p.id != product.id and p.available
+        assign others_in_stock = others_in_stock | plus: 1
+      endif
+    endfor
+  -%}
+  <style>
+    .switcher { margin: 12px 0; border: 0; padding: 0; }
+    .switcher__label { margin: 0 0 8px; font-size: 0.875rem; opacity: .8; }
+    .switcher__label span { font-weight: 600; opacity: 1; }
+    .switcher__list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .switcher__item {
+      display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+      border: 1px solid var(--switcher-border, rgba(0,0,0,.25)); border-radius: 999px;
+      color: inherit; text-decoration: none; font-size: 0.875rem;
+    }
+    .switcher__item:hover { border-color: currentColor; }
+    .switcher__item:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+    .switcher__item[aria-current="page"] {
+      background: var(--switcher-active-bg, #111); color: var(--switcher-active-text, #fff); border-color: var(--switcher-active-bg, #111);
+    }
+    .switcher__item.is-sold-out:not([aria-current]) { opacity: .6; text-decoration: line-through; border-style: dashed; }
+    .switcher__swatch { width: 18px; height: 18px; border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+    .switcher__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .switcher__note { margin: 8px 0 0; font-size: 0.875rem; font-weight: 500; color: var(--switcher-note, #1a7f37); }
+  </style>
+  <nav class="switcher" aria-label="{{ group | escape }}">
+    <p class="switcher__label">{{ group }}: <span>{{ current_label }}</span></p>
+    <div class="switcher__list">
+      {%- for p in family -%}
+        {%- liquid
+          assign label = p.metafields.switcher.label.value | default: p.title
+          assign swatch = p.metafields.switcher.swatch.value
+        -%}
+        <a class="switcher__item{% unless p.available %} is-sold-out{% endunless %}" href="{{ p.url }}"{% if p.id == product.id %} aria-current="page"{% endif %}>
+          {%- if swatch != blank -%}<span class="switcher__swatch" style="--swatch: {{ swatch }}" aria-hidden="true"></span>{%- endif -%}
+          {{ label }}
+          {%- unless p.available -%}<span class="switcher__sr"> (out of stock)</span>{%- endunless -%}
+        </a>
+      {%- endfor -%}
+    </div>
+    {%- if product.available == false and others_in_stock > 0 -%}
+      {%- assign noun = group | downcase -%}
+      <p class="switcher__note">{{ others_in_stock }} other {{ noun }}{% if others_in_stock > 1 %}s{% endif %} in stock — tap one above.</p>
+    {%- endif -%}
+  </nav>
+{%- endif -%}

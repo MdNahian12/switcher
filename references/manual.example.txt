@@ -1,0 +1,6 @@
+# One family per line: title prefix | heading (Shade, Size, Scent, Type, Set). Case doesn't matter.
+# Use for lines where the shade comes after the size, which automatic grouping misses:
+#   "Brand Velvet Lipstick 3.2g 02 Ruby Red", "Brand Velvet Lipstick 3.2g 10 Nude Kiss"
+Brand Velvet Lipstick 3.2g | Shade
+Brand Lip Liner | Shade
+Brand Eau de Parfum | Scent
