@@ -1,5 +1,7 @@
 # Switcher
 
+![Switcher: tapping between lipstick shades, each one its own Shopify product](docs/images/switcher-demo.gif)
+
 A Claude Code skill for Shopify stores that sell each shade, size or scent as its own product. Instead of merging them into variants, Switcher **links** them: a row of buttons on every product page lets shoppers switch between "Ruby Red / Nude Kiss / Berry" or "15ml / 50ml / 100ml".
 
 - Every product keeps its URL, SKU, stock, reviews and search rankings. Nothing is merged or renamed.
@@ -10,6 +12,18 @@ A Claude Code skill for Shopify stores that sell each shade, size or scent as it
 ## Why not variants?
 
 Turning separate products into variants changes their URLs (lost rankings), and breaks anything keyed to the product: inventory sync with a spreadsheet or ERP, per-product SKUs and barcodes, reviews, ads. Switcher gives shoppers the same "pick a shade" experience without touching any of that.
+
+![Merging into variants vs linking with Switcher](docs/images/variants-vs-switcher.png)
+
+## What shoppers see
+
+| Sold-out shade points to the in-stock ones | Sizes work the same way |
+|---|---|
+| ![Sold-out shade with "4 other shades in stock" note](docs/images/soldout.png) | ![Size buttons 15ml, 30ml, 50ml](docs/images/size-desktop.png) |
+
+<p align="center"><img src="docs/images/shade-phone.png" alt="Switcher on a phone" width="300"></p>
+
+The demo store above is made up ("Lumen", drawn products); open [`docs/demo.html`](docs/demo.html) in a browser to click through it. The buttons use the exact CSS from the snippet.
 
 ## Install
 

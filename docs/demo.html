@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switcher demo</title>
+<!-- Demo store for the README images: invented brand, drawn products. State comes from the URL hash:
+     #view=shade&active=2   #view=size&active=1   #view=soldout   #view=social   #view=compare   (&phone=1) -->
+<style>
+  :root { --ink: #1c1917; --soft: #6b6560; --line: #e7e2dc; --paper: #faf7f2; --ok: #1a7f37; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 -apple-system, "Segoe UI", Inter, Roboto, sans-serif; color: var(--ink); background: #fff; }
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 32px; border-bottom: 1px solid var(--line); }
+  .logo { font: 600 22px/1 Georgia, serif; letter-spacing: .5px; }
+  .nav { display: flex; gap: 22px; color: var(--soft); font-size: 14px; }
+  .pdp { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; max-width: 1100px; margin: 0 auto; padding: 36px 32px; }
+  .media { background: var(--paper); border-radius: 18px; aspect-ratio: 1 / 1; display: grid; place-items: center; position: relative; overflow: hidden; }
+  .crumb { color: var(--soft); font-size: 13px; margin-bottom: 10px; }
+  .vendor { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--soft); }
+  h1 { font: 500 30px/1.2 Georgia, serif; margin: 6px 0 12px; }
+  .price { font-size: 24px; font-weight: 600; margin: 0 0 6px; }
+  .stock { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; margin: 0; }
+  .stock::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .in { color: var(--ok); } .out { color: #c0392b; }
+  .actions { display: flex; gap: 10px; margin-top: 18px; }
+  .qty { border: 1px solid var(--line); border-radius: 999px; padding: 0 18px; display: grid; place-items: center; min-height: 48px; }
+  .add { flex: 1; min-height: 48px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; }
+  .add[disabled] { background: #d9d4ce; color: #7a746e; }
+  .assure { margin-top: 18px; color: var(--soft); font-size: 13px; }
+  .tag { position: absolute; top: 18px; left: 18px; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+
+  /* ---- identical to theme/snippets/switcher.liquid ---- */
+  .switcher { margin: 12px 0; border: 0; padding: 0; }
+  .switcher__label { margin: 0 0 8px; font-size: 0.875rem; opacity: .8; }
+  .switcher__label span { font-weight: 600; opacity: 1; }
+  .switcher__list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .switcher__item { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--switcher-border, rgba(0,0,0,.25)); border-radius: 999px; color: inherit; text-decoration: none; font-size: 0.875rem; cursor: pointer; }
+  .switcher__item[aria-current="page"] { background: var(--switcher-active-bg, #111); color: var(--switcher-active-text, #fff); border-color: var(--switcher-active-bg, #111); }
+  .switcher__item.is-sold-out:not([aria-current]) { opacity: .6; text-decoration: line-through; border-style: dashed; }
+  .switcher__swatch { width: 18px; height: 18px; border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .switcher__note { margin: 8px 0 0; font-size: 0.875rem; font-weight: 500; color: var(--switcher-note, #1a7f37); }
+
+  /* phone */
+  body.phone .bar { padding: 12px 16px; } body.phone .nav { display: none; }
+  body.phone .pdp { grid-template-columns: 1fr; gap: 18px; padding: 16px; }
+  body.phone .media { aspect-ratio: 4 / 3; } body.phone .tag { display: none; } body.phone h1 { font-size: 22px; }
+
+  /* social card + compare */
+  .card { width: 1280px; height: 640px; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 40px; padding: 64px 72px; background: linear-gradient(135deg, #faf7f2, #f3e9e4); }
+  .card h2 { font: 600 88px/1 Georgia, serif; margin: 0 0 18px; }
+  .card .lede { font-size: 26px; line-height: 1.35; color: #3d3833; margin: 0 0 26px; }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { font-size: 16px; padding: 8px 14px; border-radius: 999px; background: #fff; border: 1px solid var(--line); }
+  .panel { background: #fff; border-radius: 22px; padding: 28px; box-shadow: 0 20px 50px rgba(60,40,30,.12); }
+  .panel .switcher__item { font-size: 15px; }
+  .cmp { width: 1200px; padding: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; background: #fff; }
+  .col { border: 1px solid var(--line); border-radius: 18px; padding: 26px 28px; }
+  .col h3 { font: 600 22px/1.2 Georgia, serif; margin: 0 0 4px; }
+  .col .sub { color: var(--soft); margin: 0 0 16px; font-size: 14px; }
+  .col ul { margin: 0; padding: 0; list-style: none; }
+  .col li { padding: 9px 0; border-top: 1px solid var(--line); display: flex; gap: 10px; font-size: 15px; }
+  .bad::before { content: '✕'; color: #c0392b; font-weight: 700; } .good::before { content: '✓'; color: var(--ok); font-weight: 700; }
+  .col.win { border: 2px solid var(--ink); }
+  .url { font: 13px/1.5 ui-monospace, Consolas, monospace; background: var(--paper); border-radius: 8px; padding: 8px 10px; margin: 0 0 14px; color: #3d3833; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SHADES = [
+  {label: '01 Nude Kiss', c: '#c99a86', stock: true}, {label: '02 Rosewood', c: '#a4565f', stock: true},
+  {label: '03 Ruby Red', c: '#b3202f', stock: false}, {label: '04 Berry Crush', c: '#7b2348', stock: true},
+  {label: '05 Coral Pop', c: '#e0664f', stock: true}, {label: '06 Mocha', c: '#6e4436', stock: false}];
+const SIZES = [{label: '15ml', h: .55, stock: true, price: 'Tk 450'}, {label: '30ml', h: .75, stock: true, price: 'Tk 780'}, {label: '50ml', h: .95, stock: false, price: 'Tk 1,150'}];
+
+const lipstick = c => `<svg width="62%" viewBox="0 0 200 260"><rect x="60" y="150" width="80" height="100" rx="8" fill="#1f1b19"/><rect x="66" y="118" width="68" height="40" rx="5" fill="#c9a86a"/><path d="M74 120 L74 40 Q100 4 126 52 L126 120 Z" fill="${c}"/><path d="M80 118 L80 52 Q92 30 104 40" stroke="rgba(255,255,255,.35)" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`;
+const bottle = h => `<svg width="62%" viewBox="0 0 200 260"><g transform="translate(100 250) scale(${h}) translate(-100 -250)"><rect x="88" y="20" width="24" height="44" rx="6" fill="#1f1b19"/><rect x="80" y="58" width="40" height="18" rx="4" fill="#c9a86a"/><rect x="50" y="76" width="100" height="174" rx="22" fill="#f1d9c8"/><rect x="62" y="130" width="76" height="70" rx="8" fill="#fff"/><text x="100" y="162" text-anchor="middle" font-family="Georgia" font-size="15" fill="#1c1917">LUMEN</text><text x="100" y="182" text-anchor="middle" font-family="Arial" font-size="9" fill="#6b6560">GLOW SERUM</text></g></svg>`;
+
+function switcher(items, active, group, swatches) {
+  const others = items.filter((x, i) => i !== active && x.stock).length;
+  return `<nav class="switcher" aria-label="${group}">
+    <p class="switcher__label">${group}: <span>${items[active].label}</span></p>
+    <div class="switcher__list">${items.map((x, i) => `<a class="switcher__item${x.stock ? '' : ' is-sold-out'}"${i === active ? ' aria-current="page"' : ''}>${swatches ? `<span class="switcher__swatch" style="--swatch:${x.c}"></span>` : ''}${x.label}</a>`).join('')}</div>
+    ${items[active].stock || !others ? '' : `<p class="switcher__note">${others} other ${group.toLowerCase()}s in stock — tap one above.</p>`}
+  </nav>`;
+}
+function page(kind, active) {
+  const shade = kind !== 'size', items = shade ? SHADES : SIZES, it = items[active];
+  return `<div class="bar"><div class="logo">Lumen</div><div class="nav"><span>Makeup</span><span>Skincare</span><span>Brands</span><span>Bag (0)</span></div></div>
+  <div class="pdp">
+    <div class="media">${shade ? lipstick(it.c) : bottle(it.h)}<span class="tag">${shade ? 'Each shade is its own product' : 'Each size is its own product'}</span></div>
+    <div>
+      <div class="crumb">Home / ${shade ? 'Lips' : 'Serums'} / ${shade ? 'Velvet Matte Lipstick' : 'Glow Serum'}</div>
+      <div class="vendor">Lumen</div>
+      <h1>${shade ? 'Velvet Matte Lipstick – ' + it.label : 'Glow Vitamin C Serum – ' + it.label}</h1>
+      <p class="price">${shade ? 'Tk 650' : it.price}</p>
+      <p class="stock ${it.stock ? 'in' : 'out'}">${it.stock ? 'In stock, ready to ship' : 'Out of stock'}</p>
+      ${switcher(items, active, shade ? 'Shade' : 'Size', shade)}
+      <div class="actions"><div class="qty">− 1 +</div><button class="add"${it.stock ? '' : ' disabled'}>${it.stock ? 'Add to bag' : 'Out of stock'}</button></div>
+      <div class="assure">Cash on delivery · Delivery in 1–3 days · 100% authentic</div>
+    </div>
+  </div>`;
+}
+const card = () => `<div class="card"><div>
+  <h2>Switcher</h2>
+  <p class="lede">Shade &amp; size buttons for Shopify stores that sell every shade as its own product. No variants, no broken URLs.</p>
+  <div class="chips"><span class="chip">Claude Code skill</span><span class="chip">Keeps URLs, SKUs, stock &amp; SEO</span><span class="chip">Auto-groups products</span></div>
+  </div><div class="panel">${switcher(SHADES, 1, 'Shade', true)}<div style="height:18px"></div>${switcher(SIZES, 2, 'Size', false)}</div></div>`;
+const compare = () => `<div class="cmp">
+  <div class="col"><h3>Merge into variants</h3><p class="sub">One product, a dropdown of shades</p>
+    <div class="url">/products/lipstick-ruby-red &nbsp;→&nbsp; gone (redirect)<br>/products/lipstick?variant=4412…</div>
+    <ul><li class="bad">Shade URLs that rank in Google change</li><li class="bad">Stock sync keyed to the old product breaks</li><li class="bad">Reviews, ads and links per shade are lost</li><li class="bad">Hours of manual re-building in admin</li></ul></div>
+  <div class="col win"><h3>Link with Switcher</h3><p class="sub">Every shade stays its own product, linked by buttons</p>
+    <div class="url">/products/lipstick-ruby-red &nbsp;→&nbsp; unchanged ✓<br>/products/lipstick-nude-kiss &nbsp;→&nbsp; unchanged ✓</div>
+    <ul><li class="good">Same "pick a shade" experience for shoppers</li><li class="good">URLs, SKUs, stock, reviews and SEO untouched</li><li class="good">Sold-out pages point to in-stock shades</li><li class="good">Grouped automatically, reviewed in a CSV, undoable</li></ul></div></div>`;
+
+function render() {
+  const q = new URLSearchParams(location.hash.slice(1));
+  const view = q.get('view') || 'shade', active = +(q.get('active') || 1);
+  document.body.className = q.get('phone') ? 'phone' : '';
+  const app = document.getElementById('app');
+  if (view === 'social') app.innerHTML = card();
+  else if (view === 'compare') app.innerHTML = compare();
+  else if (view === 'soldout') app.innerHTML = page('shade', 2);
+  else app.innerHTML = page(view, active);
+  app.querySelectorAll('.switcher__item').forEach((a, i) => a.onclick = () => { q.set('active', i); if (view === 'soldout') q.set('view', 'shade'); location.hash = q; });
+}
+addEventListener('hashchange', render); render();
+</script>
+</body>
+</html>
